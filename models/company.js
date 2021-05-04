@@ -1,7 +1,7 @@
 "use strict";
 
 const db = require("../db");
-const { BadRequestError, NotFoundError } = require("../expressError");
+const { BadRequestError, NotFoundError, ExpressError } = require("../expressError");
 const { sqlForPartialUpdate } = require("../helpers/sql");
 
 /** Related functions for companies. */
@@ -49,7 +49,7 @@ class Company {
    * Returns [{ handle, name, description, numEmployees, logoUrl }, ...]
    * */
 
-  static async findAll() {
+  static async findAll(searchFilters = {}) { // create empty search filter object
     const companiesRes = await db.query(
           `SELECT handle,
                   name,
@@ -58,7 +58,46 @@ class Company {
                   logo_url AS "logoUrl"
            FROM companies
            ORDER BY name`);
+    
+    let whereExpressions = [];
+    let queryValues = [];
+
+    // set minEmployees, maxEmployees & name to be the search params
+    const { minEmployees, maxExployees, name } = searchFilters;
+
+    // throw error if minEmoloyees is greater than maxEmployees
+    if (minEmployees > maxExployees) {
+      throw new ExpressError("Min employees must be greater than max employees")
+    }
+
+    // For each possible search term, add vals to whereExpressions and queryValues 
+    // so we can generate the right SQL
+
+    if (minEmployees !== undefined) {
+      queryValues.push(minEmployees);
+      whereExpressions.push(`num_employees >= $${queryValues.length}`);
+    }
+
+    if (maxEmployees !== undefined) {
+      queryValues.push(maxEmployees);
+      whereExpressions.push(`num_employees <= $${queryValues.length}`);
+    }
+
+    if (name) {
+      queryValues.push(`%${name}%`);
+      whereExpressions.push(`name ILIKE $${queryValues.length}`);
+    }
+
+    if (whereExpressions.length > 0) {
+      query += " WHERE " + whereExpressions.join(" AND ");
+    }
+
+    // Finalize query and return results
+
+    query += " ORDER BY name";
+    const companiesRes = await db.query(query, queryValues);
     return companiesRes.rows;
+
   }
 
   /** Given a company handle, return data about company.
