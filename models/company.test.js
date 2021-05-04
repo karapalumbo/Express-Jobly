@@ -85,6 +85,69 @@ describe("findAll", function () {
       },
     ]);
   });
+
+  test("works: minEmployees", async function () {
+    let companies = await Company.findAll({ minEmployees: 2 });
+    // initially added 1 min employee and if failed... why?
+    expect(companies).toEqual([
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        numEmployees: 2,
+        logoUrl: "http://c2.img",
+      },
+      {
+        handle: "c3",
+        name: "C3",
+        description: "Desc3",
+        numEmployees: 3,
+        logoUrl: "http://c3.img",
+      },
+    ]);
+  });
+
+  test("works: maxEmployees", async function () {
+    let companies = await Company.findAll({ maxEmployees: 2 });
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      },
+      {
+        handle: "c2",
+        name: "C2",
+        description: "Desc2",
+        numEmployees: 2,
+        logoUrl: "http://c2.img",
+      }
+    ]);
+  });
+
+  test("err if minEmployees > maxEmployees", async function () {
+    try {
+      await Company.findAll({ minEmployees: 5, maxEmployees: 1 });
+      fail();
+    } catch(err) {
+      expect(err instanceof BadRequestError).toBeTruthy()
+    }
+  })
+
+  test("works: name", async function () {
+    let companies = await Company.findAll({ name: "1" });
+    expect(companies).toEqual([
+      {
+        handle: "c1",
+        name: "C1",
+        description: "Desc1",
+        numEmployees: 1,
+        logoUrl: "http://c1.img",
+      },
+    ]);
+  });
 });
 
 /************************************** get */

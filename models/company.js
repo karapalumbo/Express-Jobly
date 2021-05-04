@@ -50,54 +50,64 @@ class Company {
    * */
 
   static async findAll(searchFilters = {}) { // create empty search filter object
-    const companiesRes = await db.query(
-          `SELECT handle,
+      let query =`SELECT handle,
                   name,
                   description,
                   num_employees AS "numEmployees",
                   logo_url AS "logoUrl"
-           FROM companies
-           ORDER BY name`);
+           FROM companies`;
     
-    let whereExpressions = [];
-    let queryValues = [];
+    let whereExpressions = []; // sql expressions
+    let queryValues = []; // values of minEmp, maxEmp & name
 
     // set minEmployees, maxEmployees & name to be the search params
-    const { minEmployees, maxExployees, name } = searchFilters;
+    const { minEmployees, maxEmployees, name } = searchFilters;
 
     // throw error if minEmoloyees is greater than maxEmployees
-    if (minEmployees > maxExployees) {
-      throw new ExpressError("Min employees must be greater than max employees")
+    if (minEmployees > maxEmployees) {
+      throw new BadRequestError("Min employees must be greater than max employees")
     }
 
     // For each possible search term, add vals to whereExpressions and queryValues 
     // so we can generate the right SQL
 
+    //if minEmp isn't undefined, push value into queryValues
+    // push sql expression to search:
+    // 'where num_emp is greater than or equal to the length of queryValues
     if (minEmployees !== undefined) {
       queryValues.push(minEmployees);
       whereExpressions.push(`num_employees >= $${queryValues.length}`);
     }
 
+    //if maxEmp isn't undefined, push value into queryValues
+    // push sql expression to search:
+    // 'where num_emp is less than or equal to the length of queryValues
     if (maxEmployees !== undefined) {
       queryValues.push(maxEmployees);
       whereExpressions.push(`num_employees <= $${queryValues.length}`);
     }
 
+    //if name exists, push name into queryValues
+    // push sql expression to search:
+    // 'where name (either upper or lower case) length of queryValues
     if (name) {
       queryValues.push(`%${name}%`);
       whereExpressions.push(`name ILIKE $${queryValues.length}`);
     }
 
+    // if sql expressions arr has something in it
+    // include query where sql express and 
     if (whereExpressions.length > 0) {
       query += " WHERE " + whereExpressions.join(" AND ");
     }
 
     // Finalize query and return results
 
+    // select * from... order by name
     query += " ORDER BY name";
-    const companiesRes = await db.query(query, queryValues);
+    //make query call 
+    let companiesRes = await db.query(query, queryValues);
     return companiesRes.rows;
-
   }
 
   /** Given a company handle, return data about company.
