@@ -71,7 +71,7 @@ class Company {
     // For each possible search term, add vals to whereExpressions and queryValues 
     // so we can generate the right SQL
 
-    //if minEmp isn't undefined, push value into queryValues
+    // if minEmp isn't undefined, push value into queryValues
     // push sql expression to search:
     // 'where num_emp is greater than or equal to the length of queryValues
     if (minEmployees !== undefined) {
@@ -79,7 +79,7 @@ class Company {
       whereExpressions.push(`num_employees >= $${queryValues.length}`);
     }
 
-    //if maxEmp isn't undefined, push value into queryValues
+    // if maxEmp isn't undefined, push value into queryValues
     // push sql expression to search:
     // 'where num_emp is less than or equal to the length of queryValues
     if (maxEmployees !== undefined) {
