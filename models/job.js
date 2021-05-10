@@ -8,41 +8,33 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 
 class Job {
 
-  static async create({ title, salary, equity, company_handle }) {
-    const duplicateCheck = await db.query(
-          `SELECT title
-           FROM jobs
-           WHERE title = $1`,
-        [title]);
-
-    if (duplicateCheck.rows[0])
-      throw new BadRequestError(`Duplicate job: ${title}`);
-
+  static async create(data) {
     const result = await db.query(
-          `INSERT INTO jobs
-           (title, salary, equity, company_handle)
+          `INSERT INTO jobs (title, salary, equity, company_handle)
            VALUES ($1, $2, $3, $4)
-           RETURNING title, salary, equity, company_handle AS "companyHandle"`,
+           RETURNING id, title, salary, equity, company_handle AS "companyHandle"`,
         [
-          title,
-          salary,
-          equity,
-          companyHandle,
+          data.title,
+          data.salary,
+          data.equity,
+          data.companyHandle,
         ],
     );
-    const job = result.rows[0];
+    let job = result.rows[0];
 
     return job;
   }
 
 
   static async findAll(searchFilters = {}) { 
-      let query =`SELECT id, 
-                  title, 
-                  salary, 
-                  equity, 
-                  company_handle AS "companyHandle"
-           FROM jobs`;
+      let query =`SELECT j.id, 
+                         j.title, 
+                         j.salary, 
+                         j.equity, 
+                         j.company_handle AS "companyHandle", 
+                         c.name AS "companyName"
+                  FROM jobs j 
+                    LEFT JOIN companies AS c ON c.handle = j.company_handle`;
     
     let whereExpressions = []; 
     let queryValues = []; 
@@ -60,7 +52,6 @@ class Job {
     }
 
     if (hasEquity === true) {
-      queryValues.push(hasEquity);
       whereExpressions.push(`equity > 0`);
     }
 
@@ -81,10 +72,9 @@ class Job {
                   title,
                   salary,
                   equity,
-                  company_handle AS "companyHandle",
+                  company_handle AS "companyHandle"
            FROM jobs
-           WHERE id = $1`,
-        [id]);
+           WHERE id = $1`, [id]);
 
     const job = jobRes.rows[0];
 
@@ -106,6 +96,7 @@ class Job {
                       RETURNING id, 
                                 title, 
                                 salary, 
+                                equity,
                                 company_handle AS "companyHandle"`;
     const result = await db.query(querySql, [...values, id]);
     const job = result.rows[0];
@@ -121,8 +112,8 @@ class Job {
           `DELETE
            FROM jobs
            WHERE id = $1
-           RETURNING id`,
-        [id]);
+           RETURNING id`, [id]);
+           
     const job = result.rows[0];
 
     if (!job) throw new NotFoundError(`No job: ${id}`);
