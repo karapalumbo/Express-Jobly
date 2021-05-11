@@ -39,6 +39,7 @@ async function commonBeforeAll() {
         logoUrl: "http://c3.img",
       });
 
+  // company handle links jobs to companies 
   testJobIds[0] = (await Job.create(
       { title: "J1", salary: 1, equity: "0.1", companyHandle: "c1" })).id;
   testJobIds[1] = (await Job.create(
@@ -70,6 +71,8 @@ async function commonBeforeAll() {
     password: "password3",
     isAdmin: false,
   });
+
+  await User.applyToJob("u1", testJobIds[0])
 }
 
 

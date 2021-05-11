@@ -77,6 +77,23 @@ router.get("/:username", ensureUserOrAdmin, async function (req, res, next) {
   }
 });
 
+/** POST 
+ *
+ * Returns { applied: jobId}
+ *
+ * Authorization required: login
+ **/
+
+router.post("/:username/jobs/:id", ensureUserOrAdmin, async function (req, res, next) {
+  try{
+    const jobId = +req.params.id; 
+    await User.applyToJob(req.params.username, jobId);
+    return res.json({ applied: jobId })
+  } catch (err) {
+    return next(err)
+  }
+})
+
 
 /** PATCH /[username] { user } => { user }
  *

@@ -142,6 +142,37 @@ class User {
     return user;
   }
 
+  // add username and job id to applications table based 
+  // on which jobs the user has applied for 
+  
+  static async applyToJob(username, jobId) {
+    // select job by id
+    const preCheck = await db.query(
+          `SELECT id
+           FROM jobs
+           WHERE id = $1`, [jobId]);
+    const job = preCheck.rows[0];
+
+    // if no job found, throw err 
+    if (!job) throw new NotFoundError(`No job: ${jobId}`);
+
+    // select user by username
+    const preCheck2 = await db.query(
+          `SELECT username
+           FROM users
+           WHERE username = $1`, [username]);
+    const user = preCheck2.rows[0];
+
+    // if username not found, throw err
+    if (!user) throw new NotFoundError(`No username: ${username}`);
+
+    // insert job ID and username into applications table 
+    await db.query(
+          `INSERT INTO applications (job_id, username)
+           VALUES ($1, $2)`,
+        [jobId, username]);
+  }
+
   /** Update user data with `data`.
    *
    * This is a "partial update" --- it's fine if data doesn't contain

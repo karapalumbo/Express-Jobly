@@ -8,6 +8,15 @@ const { sqlForPartialUpdate } = require("../helpers/sql");
 
 class Job {
 
+  /** Create a job (from data), update db, return new job data.
+   *
+   * data should be { title, salary, equity, company_handle }
+   *
+   * Returns { id, title, salary, equity, companyHandle }
+   *
+   * Throws BadRequestError if job already in database.
+   * */
+
   static async create(data) {
     const result = await db.query(
           `INSERT INTO jobs (title, salary, equity, company_handle)
@@ -25,6 +34,10 @@ class Job {
     return job;
   }
 
+  /** Find all jobss.
+   *
+   * Returns [{ id, title, salary, equity, companyHandle }, ...]
+   * */
 
   static async findAll(searchFilters = {}) { 
       let query =`SELECT j.id, 
@@ -65,6 +78,12 @@ class Job {
     return jobsRes.rows;
   }
 
+  /** Given a job id, return data about job.
+   *
+   * Returns { id, title, salary, equity, companyHandle }
+   *
+   * Throws NotFoundError if not found.
+   **/
 
   static async get(id) {
     const jobRes = await db.query(
@@ -83,6 +102,15 @@ class Job {
     return job;
   }
 
+
+  /** Update job data with `data`.
+   *
+   * Data can include: {title, salary, equity, companyHandle
+   *
+   * Returns {id, title, salary, equity, companyHandle}
+   *
+   * Throws NotFoundError if not found.
+   */
 
   static async update(id, data) {
     const { setCols, values } = sqlForPartialUpdate(
@@ -106,6 +134,10 @@ class Job {
     return job;
   }
 
+  /** Delete given job from database; returns undefined.
+   *
+   * Throws NotFoundError if job not found.
+   **/
 
   static async remove(id) {
     const result = await db.query(
@@ -113,7 +145,7 @@ class Job {
            FROM jobs
            WHERE id = $1
            RETURNING id`, [id]);
-           
+
     const job = result.rows[0];
 
     if (!job) throw new NotFoundError(`No job: ${id}`);
