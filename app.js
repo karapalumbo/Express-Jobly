@@ -11,7 +11,7 @@ const { authenticateJWT, ensureAdmin, ensureUserOrAdmin } = require("./middlewar
 const authRoutes = require("./routes/auth");
 const companiesRoutes = require("./routes/companies");
 const usersRoutes = require("./routes/users");
-const jobssRoutes = require("./routes/jobs");
+const jobsRoutes = require("./routes/jobs");
 
 const morgan = require("morgan");
 
